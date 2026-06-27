@@ -10,8 +10,27 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 // Middlewares
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  /\.vercel\.app$/,      // all vercel preview/production URLs
+  /\.onrender\.com$/     // allow render URLs too
+];
+
 app.use(cors({
-  origin: '*' // Allow all origins for local development
+  origin: (origin, callback) => {
+    // Allow requests with no origin (curl, Postman, etc.)
+    if (!origin) return callback(null, true);
+    const isAllowed = allowedOrigins.some(o =>
+      typeof o === 'string' ? o === origin : o.test(origin)
+    );
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS policy: origin ${origin} not allowed`));
+    }
+  },
+  credentials: true
 }));
 app.use(express.json());
 
